@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
+import {ARButton} from './ARButton.js';
 let modelLoader = new GLTFLoader();
-let container, camera, scene, renderer, geometry, material, mesh, controls, spaceSphere, gate, time;
+let gl, container, camera, scene, renderer, geometry, material, mesh, controls, spaceSphere, gate, time;
 let loader = new THREE.TextureLoader();
 let texture = loader.load('./assets/images/AlternateUniverse.png');
 
@@ -10,8 +11,10 @@ init();
 animate();
 
 function init() {
+  gl = new THREE.WebGLRenderer({antialias: true});
   container = document.createElement("div");
   document.body.appendChild(container);
+  document.body.appendChild(ARButton.createButton(gl));
 
   camera = new THREE.PerspectiveCamera(
     45,

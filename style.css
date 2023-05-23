@@ -1,0 +1,12 @@
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+#btn {
+    position: absolute;
+    top: 0;
+    height: 10%;
+    aspect-ratio: 2/1;
+    font-size: 2vh;
+}
