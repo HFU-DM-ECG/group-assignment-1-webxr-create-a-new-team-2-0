@@ -1,102 +1,91 @@
 import * as THREE from 'three';
+import { ARButton } from 'three/addons/webxr/ARButton.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { OrbitControls } from './node_modules/three/examples/jsm/controls/OrbitControls.js';
-import {ARButton} from './ARButton.js';
 let modelLoader = new GLTFLoader();
 let gl, container, camera, scene, renderer, geometry, material, mesh, controls, spaceSphere, gate, time;
 let loader = new THREE.TextureLoader();
 let texture = loader.load('./assets/images/AlternateUniverse.png');
 
+let hitTestSourceRequested = false;
+
 init();
-animate();
 
-function init() {
-  gl = new THREE.WebGLRenderer({antialias: true});
-  container = document.createElement("div");
-  document.body.appendChild(container);
-  document.body.appendChild(ARButton.createButton(gl));
+async function init() {
 
-  camera = new THREE.PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
-    1,
-    1000
-  );
-  camera.position.set(0, 0, 10);
+  container = document.createElement( 'div' );
+  document.body.appendChild( container );
 
   scene = new THREE.Scene();
 
-//  var sky = new THREE.Mesh(new THREE.SphereGeometry(100, 100, 100), new THREE.MeshBasicMaterial());
-//  sky.material.map = new THREE.TextureLoader().load( './assets/images/earth.jpg' );
-//  sky.material.side = THREE.BackSide;
-//  sky.rotation.set(0, 90, 0);
-//  scene.add(sky);
-
-  geometry = new THREE.CircleGeometry( 0.95, 32 ); 
-  material = new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 },
-      uTexture: { value: texture },
-      uResolution: { value: new THREE.Vector2() },
-    },
-    vertexShader: document.getElementById("vertexShader").textContent,
-    fragmentShader: document.getElementById("fragmentShader").textContent,
-  });
-
-  mesh = new THREE.Mesh(geometry, material);
-  mesh.material.side = THREE.DoubleSide;
-  mesh.position.set(0, 0.2, -0.35);
-  scene.add(mesh);
-
-// //   portal = new THREE.Object3D();
-// //   modelLoader.load('./assets/models/portalmodel.glb', function (gltf) {
-// //     portal.add(gltf.scene.children[0]);
-// //     portal.name = "portal";
-// //     portal.children[0].children[0].castShadow = true;
-// //     portal.children[0].children[0].receiveShadow = true;
-// //     scene.add(portal);
-// //     portal.position.set(0, -1, 0);
-// //     portal.scale.set(12, 12, 12);
-// // }, undefined, function (error) {
-// //     console.error(error);
-// // })
-
-gate = new THREE.Object3D();
-modelLoader.load('./assets/models/Xenon_Gate.gltf', function (gltf) {
-  gate = gltf.scene;
-  gate.name = "gate";
-  scene.add(gate);
-  gate.position.set(0, 0.21, -0.3);
-  gate.scale.set(2, 2, 2);
-
-}, undefined, function (error) {
-  console.error(error);
-})
-
-spaceSphere = new THREE.Object3D();
-modelLoader.load('./assets/models/Space_Sphere.gltf', function (gltf) {
-  spaceSphere = gltf.scene;
-  spaceSphere.name = "spaceSphere";
-  scene.add(spaceSphere);
-  spaceSphere.position.set(0, 0, 0);
-  spaceSphere.scale.set(10, 10, 10);
-  spaceSphere.rotation.set(5, 5, 5);
-}, undefined, function (error) {
-  console.error(error);
-})
-
+  camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 20 );
+  camera.position.set(0, 0, 3);
 
   const light = new THREE.DirectionalLight(0xffffff, 2);
   light.position.set(0, 10, 0);
   scene.add(light);
 
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  container.appendChild(renderer.domElement);
-  controls = new OrbitControls(camera, renderer.domElement);
+  //
 
-  window.addEventListener("resize", onWindowResize);
+  renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.xr.enabled = true;
+  container.appendChild( renderer.domElement );
+
+  //
+  document.body.appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ] } ) );
+
+  //
+
+  addObjects();
+  animate();
+  //
+
+  window.addEventListener( 'resize', onWindowResize );
+
+}
+
+function addObjects() {
+    geometry = new THREE.CircleGeometry( 0.95, 32 ); 
+    material = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime: { value: 0 },
+        uTexture: { value: texture },
+        uResolution: { value: new THREE.Vector2() },
+      },
+      vertexShader: document.getElementById("vertexShader").textContent,
+      fragmentShader: document.getElementById("fragmentShader").textContent,
+    });
+
+    mesh = new THREE.Mesh(geometry, material);
+    mesh.material.side = THREE.DoubleSide;
+    mesh.scale.set(0.1, 0.1, 0.1);
+    mesh.position.set(0, 0.2, -0.3);
+    scene.add(mesh);
+
+    gate = new THREE.Object3D();
+    modelLoader.load('./assets/models/Xenon_Gate.gltf', function (gltf) {
+      gate = gltf.scene;
+      gate.name = "gate";
+      scene.add(gate);
+      gate.position.set(0, 0.21, -0.3);
+      gate.scale.set(0.2, 0.2, 0.2);
+
+    }, undefined, function (error) {
+      console.error(error);
+    })
+
+    spaceSphere = new THREE.Object3D();
+    modelLoader.load('./assets/models/Space_Sphere.gltf', function (gltf) {
+      spaceSphere = gltf.scene;
+      spaceSphere.name = "spaceSphere";
+      scene.add(spaceSphere);
+      spaceSphere.position.set(0, 0, 0);
+      spaceSphere.scale.set(1, 1, 1);
+      spaceSphere.rotation.set(5, 5, 5);
+    }, undefined, function (error) {
+      console.error(error);
+    })
 }
 
 function animateObject(object, freq, amplitude, delay, currentTime, transform) { 
@@ -114,7 +103,7 @@ function animateObject(object, freq, amplitude, delay, currentTime, transform) {
     break;
     case "scale":
       window.setTimeout(() => {
-        object.scale.set((Math.sin(currentTime * freq) * amplitude) + 1, (Math.sin(currentTime * freq) * amplitude) + 1, 0);
+        object.scale.set((Math.sin(currentTime * freq) * amplitude) + 0.08, (Math.sin(currentTime * freq) * amplitude) + 0.08, 0);
       }, delay);
     break;
     default:
@@ -124,17 +113,19 @@ function animateObject(object, freq, amplitude, delay, currentTime, transform) {
 }
 
 function onWindowResize() {
+
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
 
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize( window.innerWidth, window.innerHeight );
+
 }
 
+//
 
 function animate() {
   const currentTime = Date.now() / 1000; 
   time = currentTime;
-  // animateObject(portal, 1, 1, 0, time, "position");
     
   gate.traverse( function( child ) {
     if ( child instanceof THREE.Mesh ) {
@@ -148,17 +139,51 @@ function animate() {
   animateObject(mesh, 1, 1, 500, time, "position");
   animateObject(mesh, 1, 1, 0, time, "rotation");
   animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
-  animateObject(mesh, 1.1, 0.1, 0, 0.1*time, "scale");
+  animateObject(mesh, 10, 0.005, 0, 0.1*time, "scale");
   requestAnimationFrame(animate);
-  render();
-  controls.update();
+  renderer.setAnimationLoop( render );
+
 }
 
-function render() {
+function render( timestamp, frame ) {
+
+  if ( frame ) {
+
+    const referenceSpace = renderer.xr.getReferenceSpace();
+    const session = renderer.xr.getSession();
+
+    if ( hitTestSourceRequested === false ) {
+
+      session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
+
+        session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
+
+          hitTestSource = source;
+
+        } );
+
+      } );
+
+      session.addEventListener( 'end', function () {
+
+        hitTestSourceRequested = false;
+        hitTestSource = null;
+
+      } );
+
+      hitTestSourceRequested = true;
+
+    }
+
+
+  }
+
   material.uniforms.uTime.value += 0.01;
   material.uniforms.uResolution.value.set(
     renderer.domElement.width,
     renderer.domElement.height
   );
-  renderer.render(scene, camera);
+
+  renderer.render( scene, camera );
+
 }
