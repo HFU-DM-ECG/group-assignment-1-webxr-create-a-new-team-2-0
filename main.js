@@ -1,12 +1,11 @@
 import * as THREE from 'three';
 import { ARButton } from 'three/addons/webxr/ARButton.js';
+import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 let modelLoader = new GLTFLoader();
-let gl, container, camera, scene, renderer, geometry, material, mesh, controls, spaceSphere, gate, time;
+let container, camera, scene, renderer, geometry, material, mesh, spaceSphere, gate, time;
 let loader = new THREE.TextureLoader();
 let texture = loader.load('./assets/images/AlternateUniverse.png');
-
-let hitTestSourceRequested = false;
 
 init();
 
@@ -33,8 +32,8 @@ async function init() {
   container.appendChild( renderer.domElement );
 
   //
-  document.body.appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ] } ) );
-
+  document.getElementById("buttonContainer").appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ] } ) );
+  document.getElementById("buttonContainer").appendChild( VRButton.createButton( renderer ) );
   //
 
   addObjects();
@@ -146,37 +145,6 @@ function animate() {
 }
 
 function render( timestamp, frame ) {
-
-  if ( frame ) {
-
-    const referenceSpace = renderer.xr.getReferenceSpace();
-    const session = renderer.xr.getSession();
-
-    if ( hitTestSourceRequested === false ) {
-
-      session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
-
-        session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
-
-          hitTestSource = source;
-
-        } );
-
-      } );
-
-      session.addEventListener( 'end', function () {
-
-        hitTestSourceRequested = false;
-        hitTestSource = null;
-
-      } );
-
-      hitTestSourceRequested = true;
-
-    }
-
-
-  }
 
   material.uniforms.uTime.value += 0.01;
   material.uniforms.uResolution.value.set(
