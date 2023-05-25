@@ -134,7 +134,7 @@
   ],
   "images": [
     {
-      "uri": "textures/Space.png"
+      "uri": "test/Space.png"
     }
   ],
   "samplers": [
