@@ -2,10 +2,27 @@ import * as THREE from 'three';
 import { ARButton } from 'three/addons/webxr/ARButton.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-let modelLoader = new GLTFLoader();
-let container, camera, scene, renderer, geometry, material, mesh, spaceSphere, gate, time;
+
+let container, camera, scene, renderer, geometry, material, mesh, spaceSphere, gate, time, portal, controller, reticle;
+
 let loader = new THREE.TextureLoader();
 let texture = loader.load('./assets/images/AlternateUniverse.png');
+let modelLoader = new GLTFLoader();
+
+let hitTestSource = null;
+let hitTestSourceRequested = false;
+
+let randomModels = [
+"./assets/models/portalmodel.glb", 
+"./assets/models/star_of_sun.glb", 
+"./assets/models/mercury_planet.glb", 
+"./assets/models/purple_planet.glb",
+"./assets/models/saturn_planet.glb",
+"./assets/models/death_row_spaceship.glb", 
+"./assets/models/intergalactic_spaceship_only_model.glb", 
+"./assets/models/spaceship.glb",
+"./assets/models/pod.glb"
+]
 
 init();
 
@@ -45,7 +62,7 @@ async function init() {
 }
 
 function addObjects() {
-    geometry = new THREE.CircleGeometry( 0.95, 32 ); 
+    portal = new THREE.CircleGeometry( 0.95, 32 ); 
     material = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
@@ -56,7 +73,7 @@ function addObjects() {
       fragmentShader: document.getElementById("fragmentShader").textContent,
     });
 
-    mesh = new THREE.Mesh(geometry, material);
+    mesh = new THREE.Mesh(portal, material);
     mesh.material.side = THREE.DoubleSide;
     mesh.scale.set(0.1, 0.1, 0.1);
     mesh.position.set(0, 0.2, -0.3);
@@ -85,6 +102,42 @@ function addObjects() {
     }, undefined, function (error) {
       console.error(error);
     })
+
+
+    geometry = new THREE.Object3D();
+				function onSelect() {
+
+					if ( reticle.visible ) {
+
+            let randomScale = Math.random() * 0.5 + 0.2;
+            let randomRotate = Math.random() * 360;
+
+            geometry = new THREE.Object3D();
+              modelLoader.load(randomModels[Math.floor(Math.random() * randomModels.length)], function (gltf) {
+                geometry.add(gltf.scene.children[0]);
+                geometry.name = "random_model";
+                reticle.matrix.decompose( geometry.position, geometry.quaternion, geometry.scale );
+
+                geometry.scale.set(randomScale, randomScale, randomScale);
+                geometry.rotation.set(randomRotate, randomRotate, randomRotate);
+                scene.add(geometry);
+            }, undefined, function (error) {
+                console.error(error);
+            })
+					}
+				}
+
+				controller = renderer.xr.getController( 0 );
+				controller.addEventListener( 'select', onSelect );
+				scene.add( controller );
+
+				reticle = new THREE.Mesh(
+					new THREE.RingGeometry( 0.15, 0.2, 32 ).rotateX( - Math.PI / 2 ),
+					new THREE.MeshBasicMaterial()
+				);
+				reticle.matrixAutoUpdate = false;
+				reticle.visible = false;
+				scene.add( reticle );
 }
 
 function animateObject(object, freq, amplitude, delay, currentTime, transform) { 
@@ -145,6 +198,34 @@ function animate() {
 }
 
 function render( timestamp, frame ) {
+  if ( frame ) {
+    const referenceSpace = renderer.xr.getReferenceSpace();
+    const session = renderer.xr.getSession();
+
+    if ( hitTestSourceRequested === false ) {
+      session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
+        session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
+          hitTestSource = source;
+        } );
+      } );
+      session.addEventListener( 'end', function () {
+        hitTestSourceRequested = false;
+        hitTestSource = null;
+      } );
+      hitTestSourceRequested = true;
+    }
+
+    if ( hitTestSource ) {
+      const hitTestResults = frame.getHitTestResults( hitTestSource );
+      if ( hitTestResults.length ) {
+        const hit = hitTestResults[ 0 ];
+        reticle.visible = true;
+        reticle.matrix.fromArray( hit.getPose( referenceSpace ).transform.matrix );
+      } else {
+        reticle.visible = false;
+      }
+    }
+  }
 
   material.uniforms.uTime.value += 0.01;
   material.uniforms.uResolution.value.set(
