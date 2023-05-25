@@ -235,7 +235,7 @@
       "name": "Xenon_Material"
     }
   ],
-  "texture": [
+  "textures": [
     {
       "sampler": 0,
       "source": 0,
@@ -259,16 +259,16 @@
   ],
   "images": [
     {
-      "uri": "texture/Xenon_Normal.png"
+      "uri": "textures/Xenon_Normal.png"
     },
     {
-      "uri": "texture/Xenon_Light.png"
+      "uri": "textures/Xenon_Light.png"
     },
     {
-      "uri": "texture/Xenon_Diffuse.png"
+      "uri": "textures/Xenon_Diffuse.png"
     },
     {
-      "uri": "texture/Xenon_Specular.png"
+      "uri": "textures/Xenon_Specular.png"
     }
   ],
   "samplers": [

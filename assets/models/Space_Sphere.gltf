@@ -125,7 +125,7 @@
       "name": "Material #2"
     }
   ],
-  "texture": [
+  "textures": [
     {
       "sampler": 0,
       "source": 0,
@@ -134,7 +134,7 @@
   ],
   "images": [
     {
-      "uri": "texture/Space.png"
+      "uri": "Textures/Space.png"
     }
   ],
   "samplers": [

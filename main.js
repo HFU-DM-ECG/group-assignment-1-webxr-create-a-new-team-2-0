@@ -5,9 +5,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let container, camera, scene, renderer, geometry, material, mesh, spaceSphere, gate, time, portal, controller, reticle;
 
+let modelLoader = new GLTFLoader();
 let loader = new THREE.TextureLoader();
 let texture = loader.load('./assets/images/AlternateUniverse.png');
-let modelLoader = new GLTFLoader();
+
 
 let hitTestSource = null;
 let hitTestSourceRequested = false;
@@ -83,10 +84,9 @@ function addObjects() {
     modelLoader.load('./assets/models/Xenon_Gate.gltf', function (gltf) {
       gate = gltf.scene;
       gate.name = "gate";
-      scene.add(gate);
       gate.position.set(0, 0.21, -0.3);
       gate.scale.set(0.2, 0.2, 0.2);
-
+      scene.add(gate);
     }, undefined, function (error) {
       console.error(error);
     })
@@ -95,10 +95,10 @@ function addObjects() {
     modelLoader.load('./assets/models/Space_Sphere.gltf', function (gltf) {
       spaceSphere = gltf.scene;
       spaceSphere.name = "spaceSphere";
-      scene.add(spaceSphere);
       spaceSphere.position.set(0, 0, 0);
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
+      scene.add(spaceSphere);
     }, undefined, function (error) {
       console.error(error);
     })
