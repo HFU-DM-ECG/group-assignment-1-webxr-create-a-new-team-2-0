@@ -129,7 +129,7 @@ function addObjects() {
 
 					if ( reticle.visible ) {
 
-            let randomScale = Math.random() * 0.3;
+            let randomScale = Math.random() * 0.1;
             let randomRotate = Math.random() * 360;
 
             geometry = new THREE.Object3D();
