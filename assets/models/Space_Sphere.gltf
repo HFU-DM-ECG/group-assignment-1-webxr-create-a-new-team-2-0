@@ -19,7 +19,7 @@
         8.1595,
         8.1595
       ],
-      "name": "Box001"
+      "name": "Space_Sphere_Inner_Normals"
     }
   ],
   "meshes": [
@@ -35,7 +35,7 @@
           "material": 0
         }
       ],
-      "name": "Box001"
+      "name": "Space_Sphere_Inner_Normals"
     }
   ],
   "accessors": [
@@ -102,7 +102,7 @@
   ],
   "buffers": [
     {
-      "uri": "Space_Sphere.bin",
+      "uri": "space_Sphere.bin",
       "byteLength": 19008
     }
   ],
@@ -129,12 +129,12 @@
     {
       "sampler": 0,
       "source": 0,
-      "name": "Space.png"
+      "name": "space_1080.png"
     }
   ],
   "images": [
     {
-      "uri": "Textures/Space.png"
+      "uri": "textures/space_1080.png"
     }
   ],
   "samplers": [

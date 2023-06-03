@@ -5,10 +5,25 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 let container, camera, scene, renderer, geometry, material, mesh, spaceSphere, gate, time, portal, controller, reticle;
 
-let modelLoader = new GLTFLoader();
+const manager = new THREE.LoadingManager();
+
+let xenon_Gate_Loaded = false;
+let space_Loaded = false;
+
+manager.onLoad = function (url){
+  if (url == './assets/models/xenon_Gate.gltf')
+    {
+      xenon_Gate_Loaded = true;
+    }
+  if (url == './assets/models/space_Sphere.gltf')
+    {
+      space_Loaded = true;
+    }
+};
+
+let modelLoader = new GLTFLoader(manager);
 let loader = new THREE.TextureLoader();
 let texture = loader.load('./assets/images/AlternateUniverse.png');
-
 
 let hitTestSource = null;
 let hitTestSourceRequested = false;
@@ -24,6 +39,7 @@ let randomModels = [
 "./assets/models/spaceship.glb",
 "./assets/models/pod.glb"
 ]
+
 
 init();
 
@@ -63,7 +79,32 @@ async function init() {
 }
 
 function addObjects() {
-    portal = new THREE.CircleGeometry( 0.95, 32 ); 
+    gate = new THREE.Object3D();
+    modelLoader.load('./assets/models/xenon_Gate.gltf', function (gltf) {
+      gate = gltf.scene;
+      gate.name = "gate";
+      gate.position.set(0, 0.20, -0.3);
+      gate.scale.set(0.2, 0.2, 0.2);
+      scene.add(gate);
+      xenon_Gate_Loaded = true;
+    }, undefined, function (error) {
+      console.error(error);
+    })
+
+    spaceSphere = new THREE.Object3D();
+    modelLoader.load('./assets/models/space_Sphere.gltf', function (gltf) {
+      spaceSphere = gltf.scene;
+      spaceSphere.name = "spaceSphere";
+      spaceSphere.position.set(0, 0, 0);
+      spaceSphere.scale.set(1, 1, 1);
+      spaceSphere.rotation.set(5, 5, 5);
+      scene.add(spaceSphere);
+      space_Loaded = true;
+    }, undefined, function (error) {
+    console.error(error);
+    })
+
+    portal = new THREE.CircleGeometry( 1.3, 32 ); 
     material = new THREE.ShaderMaterial({
       uniforms: {
         uTime: { value: 0 },
@@ -80,28 +121,7 @@ function addObjects() {
     mesh.position.set(0, 0.2, -0.3);
     scene.add(mesh);
 
-    gate = new THREE.Object3D();
-    modelLoader.load('./assets/models/Xenon_Gate.gltf', function (gltf) {
-      gate = gltf.scene;
-      gate.name = "gate";
-      gate.position.set(0, 0.21, -0.3);
-      gate.scale.set(0.2, 0.2, 0.2);
-      scene.add(gate);
-    }, undefined, function (error) {
-      console.error(error);
-    })
 
-    spaceSphere = new THREE.Object3D();
-    modelLoader.load('./assets/models/Space_Sphere.gltf', function (gltf) {
-      spaceSphere = gltf.scene;
-      spaceSphere.name = "spaceSphere";
-      spaceSphere.position.set(0, 0, 0);
-      spaceSphere.scale.set(1, 1, 1);
-      spaceSphere.rotation.set(5, 5, 5);
-      scene.add(spaceSphere);
-    }, undefined, function (error) {
-      console.error(error);
-    })
 
 
     geometry = new THREE.Object3D();
@@ -176,22 +196,29 @@ function onWindowResize() {
 //
 
 function animate() {
-  const currentTime = Date.now() / 1000; 
-  time = currentTime;
-    
-  gate.traverse( function( child ) {
-    if ( child instanceof THREE.Mesh ) {
+  if(gate && mesh && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){
+    const currentTime = Date.now() / 1000; 
+    time = currentTime;
+      
+    gate.traverse( function( child ) {
+      if ( child instanceof THREE.Mesh ) {
+  
+          child.material.emissiveIntensity = Math.sin(time)*0.2+1.3; // Adjust brightness
+          const emissiveR = Math.floor((((Math.cos(time)+1)/2)*255)); // " + (((Math.sin(time/1000)+1)/2)*255) + "
+          const emissiveG = Math.floor((((Math.sin(time)+1)/2)*255));
+          const emissiveB = Math.floor((((Math.cos(time+77.0)+1)/2)*255));
+          const emissiveRGB = "rgb(" + emissiveR + "," + emissiveG +","+ emissiveB + ")" ;
+          child.material.emissive = new THREE.Color(emissiveRGB); // Adjust Color "rgb(0, 255, 0)"
+        }
+    } );
+  
+    animateObject(gate, 1, 1, 0, time, "position");
+    animateObject(mesh, 1, 1, 100, time, "position");
+    animateObject(mesh, 1, 1, 0, time, "rotation");
+    animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
+    animateObject(mesh, 1, 0.005, 0, 0.15*time, "scale");
+  }
 
-        child.material.emissiveIntensity = Math.sin(time * 0.25) * 0.4 + 0.8; // Adjust brightness
-        child.material.emissive = new THREE.Color(0xFFFFFF); // Adjust Color
-      }
-  } );
-
-  animateObject(gate, 1, 1, 0, time, "position");
-  animateObject(mesh, 1, 1, 500, time, "position");
-  animateObject(mesh, 1, 1, 0, time, "rotation");
-  animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
-  animateObject(mesh, 10, 0.005, 0, 0.1*time, "scale");
   requestAnimationFrame(animate);
   renderer.setAnimationLoop( render );
 

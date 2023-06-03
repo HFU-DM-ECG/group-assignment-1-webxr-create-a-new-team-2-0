@@ -207,7 +207,7 @@
   ],
   "buffers": [
     {
-      "uri": "Xenon_Gate.bin",
+      "uri": "xenon_Gate.bin",
       "byteLength": 710308
     }
   ],
@@ -232,43 +232,43 @@
         1.0,
         1.0
       ],
-      "name": "Xenon_Material"
+      "name": "xenon_Material"
     }
   ],
   "textures": [
     {
       "sampler": 0,
       "source": 0,
-      "name": "Xenon_Normal.png"
+      "name": "xenon_Normal_1080.png"
     },
     {
       "sampler": 0,
       "source": 1,
-      "name": "Xenon_Light.png"
+      "name": "xenon_Light_1080.png"
     },
     {
       "sampler": 0,
       "source": 2,
-      "name": "Xenon_Diffuse.png"
+      "name": "xenon_Diffuse_1080.png"
     },
     {
       "sampler": 0,
       "source": 3,
-      "name": "Xenon_Specular.png"
+      "name": "xenon_Specular_1080.png"
     }
   ],
   "images": [
     {
-      "uri": "textures/Xenon_Normal.png"
+      "uri": "textures/xenon_Normal_1080.png"
     },
     {
-      "uri": "textures/Xenon_Light.png"
+      "uri": "textures/xenon_Light_1080.png"
     },
     {
-      "uri": "textures/Xenon_Diffuse.png"
+      "uri": "textures/xenon_Diffuse_1080.png"
     },
     {
-      "uri": "textures/Xenon_Specular.png"
+      "uri": "textures/xenon_Specular_1080.png"
     }
   ],
   "samplers": [
