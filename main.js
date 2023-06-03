@@ -10,6 +10,8 @@ const manager = new THREE.LoadingManager();
 let xenon_Gate_Loaded = false;
 let space_Loaded = false;
 
+var materialPhong = new THREE.MeshPhongMaterial();
+
 manager.onLoad = function (url){
   if (url == './assets/models/xenon_Gate.gltf')
     {
@@ -98,6 +100,7 @@ function addObjects() {
       spaceSphere.position.set(0, 0, 0);
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
+      spaceSphere.renderOrder = 1;
       scene.add(spaceSphere);
       space_Loaded = true;
     }, undefined, function (error) {
@@ -115,8 +118,10 @@ function addObjects() {
       fragmentShader: document.getElementById("fragmentShader").textContent,
     });
 
-    mesh = new THREE.Mesh(portal, material);
+    mesh = new THREE.Mesh(portal, materialPhong.clone());
     mesh.material.side = THREE.DoubleSide;
+    mesh.material.colorWrite = false;
+    mesh.renderOrder = 2;
     mesh.scale.set(0.1, 0.1, 0.1);
     mesh.position.set(0, 0.2, -0.3);
     scene.add(mesh);
@@ -213,7 +218,7 @@ function animate() {
     } );
   
     animateObject(gate, 1, 1, 0, time, "position");
-    animateObject(mesh, 1, 1, 100, time, "position");
+    animateObject(mesh, 1, 1, 0, time, "position");
     animateObject(mesh, 1, 1, 0, time, "rotation");
     animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
     animateObject(mesh, 1, 0.005, 0, 0.15*time, "scale");
