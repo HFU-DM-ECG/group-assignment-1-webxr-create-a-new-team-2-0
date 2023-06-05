@@ -29,6 +29,7 @@ let texture = loader.load('./assets/images/AlternateUniverse.png');
 
 let hitTestSource = null;
 let hitTestSourceRequested = false;
+let xr_mode = "xr";
 
 let randomModels = [
 "./assets/models/portalmodel.glb", 
@@ -41,7 +42,6 @@ let randomModels = [
 "./assets/models/spaceship.glb",
 "./assets/models/pod.glb"
 ]
-
 
 init();
 
@@ -70,6 +70,8 @@ async function init() {
   //
   document.getElementById("buttonContainer").appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ] } ) );
   document.getElementById("buttonContainer").appendChild( VRButton.createButton( renderer ) );
+  document.getElementById("ARButton").addEventListener("click", () => xr_mode = "ar");
+  document.getElementById("VRButton").addEventListener("click", () => xr_mode = "vr");
   //
 
   addObjects();
@@ -198,6 +200,30 @@ function onWindowResize() {
 
 }
 
+function getDistance() {
+  let x1 = camera.position.x;
+  let y1 = camera.position.y;
+  let z1 = camera.position.z;
+
+  let x2 = mesh.position.x;
+  let y2 = mesh.position.y;
+  let z2 = mesh.position.z;
+
+  let x = x2 - x1;
+  let y = y2 - y1;
+  let z = z2 - z1;
+
+  let distance = Math.sqrt(x * x + y * y + z * z);
+
+  if ( distance < 0.001 ) {
+    mesh.renderOrder = 1;
+    spaceSphere.renderOrder = 2;
+  } else {
+    mesh.renderOrder = 2;
+    spaceSphere.renderOrder = 1;
+  }
+}
+
 //
 
 function animate() {
@@ -224,37 +250,41 @@ function animate() {
     animateObject(mesh, 1, 0.005, 0, 0.15*time, "scale");
   }
 
+  getDistance();
+
   requestAnimationFrame(animate);
   renderer.setAnimationLoop( render );
 
 }
 
 function render( timestamp, frame ) {
+  if (xr_mode == "ar") {  
   if ( frame ) {
-    const referenceSpace = renderer.xr.getReferenceSpace();
-    const session = renderer.xr.getSession();
+      const referenceSpace = renderer.xr.getReferenceSpace();
+      const session = renderer.xr.getSession();
 
-    if ( hitTestSourceRequested === false ) {
-      session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
-        session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
-          hitTestSource = source;
+      if ( hitTestSourceRequested === false ) {
+        session.requestReferenceSpace( 'viewer' ).then( function ( referenceSpace ) {
+          session.requestHitTestSource( { space: referenceSpace } ).then( function ( source ) {
+            hitTestSource = source;
+          } );
         } );
-      } );
-      session.addEventListener( 'end', function () {
-        hitTestSourceRequested = false;
-        hitTestSource = null;
-      } );
-      hitTestSourceRequested = true;
-    }
+        session.addEventListener( 'end', function () {
+          hitTestSourceRequested = false;
+          hitTestSource = null;
+        } );
+        hitTestSourceRequested = true;
+      }
 
-    if ( hitTestSource ) {
-      const hitTestResults = frame.getHitTestResults( hitTestSource );
-      if ( hitTestResults.length ) {
-        const hit = hitTestResults[ 0 ];
-        reticle.visible = true;
-        reticle.matrix.fromArray( hit.getPose( referenceSpace ).transform.matrix );
-      } else {
-        reticle.visible = false;
+      if ( hitTestSource ) {
+        const hitTestResults = frame.getHitTestResults( hitTestSource );
+        if ( hitTestResults.length ) {
+          const hit = hitTestResults[ 0 ];
+          reticle.visible = true;
+          reticle.matrix.fromArray( hit.getPose( referenceSpace ).transform.matrix );
+        } else {
+          reticle.visible = false;
+        }
       }
     }
   }
@@ -266,5 +296,4 @@ function render( timestamp, frame ) {
   );
 
   renderer.render( scene, camera );
-
 }
