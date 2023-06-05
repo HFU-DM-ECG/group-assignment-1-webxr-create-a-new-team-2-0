@@ -102,7 +102,6 @@ function addObjects() {
       spaceSphere.position.set(0, 0, 0);
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
-      spaceSphere.renderOrder = 1;
       scene.add(spaceSphere);
       space_Loaded = true;
     }, undefined, function (error) {
@@ -123,7 +122,6 @@ function addObjects() {
     mesh = new THREE.Mesh(portal, materialPhong.clone());
     mesh.material.side = THREE.DoubleSide;
     mesh.material.colorWrite = false;
-    mesh.renderOrder = 2;
     mesh.scale.set(0.1, 0.1, 0.1);
     mesh.position.set(0, 0.2, -0.3);
     scene.add(mesh);
