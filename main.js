@@ -226,8 +226,6 @@ function animate() {
     animateObject(mesh, 1, 0.005, 0, 0.15*time, "scale");
   }
 
-  getDistance();
-
   requestAnimationFrame(animate);
   renderer.setAnimationLoop( render );
 
