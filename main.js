@@ -200,30 +200,6 @@ function onWindowResize() {
 
 }
 
-function getDistance() {
-  let x1 = camera.position.x;
-  let y1 = camera.position.y;
-  let z1 = camera.position.z;
-
-  let x2 = mesh.position.x;
-  let y2 = mesh.position.y;
-  let z2 = mesh.position.z;
-
-  let x = x2 - x1;
-  let y = y2 - y1;
-  let z = z2 - z1;
-
-  let distance = Math.sqrt(x * x + y * y + z * z);
-
-  if ( distance < 0.001 ) {
-    mesh.renderOrder = 1;
-    spaceSphere.renderOrder = 2;
-  } else {
-    mesh.renderOrder = 2;
-    spaceSphere.renderOrder = 1;
-  }
-}
-
 //
 
 function animate() {
