@@ -1,11 +1,19 @@
+// Three JS and AR Settup
+
 import * as THREE from 'three';
 import { ARButton } from 'three/addons/webxr/ARButton.js';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+// Defining global variables
+
 let container, camera, scene, renderer, geometry, material, mesh, spaceSphere, gate, time, portal, controller, reticle;
 
+// LoadingManager. Work in Progress
+
 const manager = new THREE.LoadingManager();
+
+// Setting loading variables. Prevents errors from calling the animate function while the models are not jet loaded.
 
 let xenon_Gate_Loaded = false;
 let space_Loaded = false;
@@ -23,6 +31,8 @@ manager.onLoad = function (url){
     }
 };
 
+// HitTest settup
+
 let modelLoader = new GLTFLoader(manager);
 let loader = new THREE.TextureLoader();
 let texture = loader.load('./assets/images/AlternateUniverse.png');
@@ -30,6 +40,8 @@ let texture = loader.load('./assets/images/AlternateUniverse.png');
 let hitTestSource = null;
 let hitTestSourceRequested = false;
 let xr_mode = "xr";
+
+// Random Model array
 
 let randomModels = [
 "./assets/models/portalmodel.glb", 
@@ -43,12 +55,14 @@ let randomModels = [
 "./assets/models/pod.glb"
 ]
 
-init();
+init(); // Call Init function for main settup
 
 async function init() {
 
   container = document.createElement( 'div' );
   document.body.appendChild( container );
+
+  // Scene Settup
 
   scene = new THREE.Scene();
 
@@ -59,7 +73,7 @@ async function init() {
   light.position.set(0, 10, 0);
   scene.add(light);
 
-  //
+  // Render Settup
 
   renderer = new THREE.WebGLRenderer( { antialias: true, alpha: true } );
   renderer.setPixelRatio( window.devicePixelRatio );
@@ -67,46 +81,56 @@ async function init() {
   renderer.xr.enabled = true;
   container.appendChild( renderer.domElement );
 
-  //
+  // User Interface
+
   document.getElementById("buttonContainer").appendChild( ARButton.createButton( renderer, { requiredFeatures: [ 'hit-test' ] } ) );
   document.getElementById("buttonContainer").appendChild( VRButton.createButton( renderer ) );
   document.getElementById("ARButton").addEventListener("click", () => xr_mode = "ar");
   document.getElementById("VRButton").addEventListener("click", () => xr_mode = "vr");
-  //
+  
 
-  addObjects();
-  animate();
+  addObjects(); // Call add Objects function
+  animate(); // Call animate function. Will loop with empty results while the models are still loading
   //
 
   window.addEventListener( 'resize', onWindowResize );
 
 }
 
-function addObjects() {
+// Adding the static objects
+
+function addObjects() { 
+
+    // Adding the Gate model
+
     gate = new THREE.Object3D();
-    modelLoader.load('./assets/models/xenon_Gate.gltf', function (gltf) {
+    modelLoader.load('./assets/models/xenon_Gate.gltf', function (gltf) { // GLTF loader
       gate = gltf.scene;
       gate.name = "gate";
       gate.position.set(0, 0.20, -0.3);
       gate.scale.set(0.2, 0.2, 0.2);
-      scene.add(gate);
-      xenon_Gate_Loaded = true;
+      scene.add(gate); // gate has two objects. gate.children[0] = Outer Ring, gate.children[1] = Inner Ring
+      xenon_Gate_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
     }, undefined, function (error) {
       console.error(error);
     })
 
+    // Adding the Skybox
+
     spaceSphere = new THREE.Object3D();
-    modelLoader.load('./assets/models/space_Sphere.gltf', function (gltf) {
+    modelLoader.load('./assets/models/space_Sphere.gltf', function (gltf) { // GLTF loader
       spaceSphere = gltf.scene;
       spaceSphere.name = "spaceSphere";
       spaceSphere.position.set(0, 0, 0);
       spaceSphere.scale.set(1, 1, 1);
       spaceSphere.rotation.set(5, 5, 5);
       scene.add(spaceSphere);
-      space_Loaded = true;
+      space_Loaded = true; // Set variable to true as soon as the model has been loaded. See animate function
     }, undefined, function (error) {
     console.error(error);
     })
+
+    // Adding the Portal
 
     portal = new THREE.CircleGeometry( 1.3, 32 ); 
     material = new THREE.ShaderMaterial({
@@ -119,15 +143,14 @@ function addObjects() {
       fragmentShader: document.getElementById("fragmentShader").textContent,
     });
 
-    mesh = new THREE.Mesh(portal, materialPhong.clone());
+    mesh = new THREE.Mesh(portal, materialPhong.clone()); // Clones the predefined Phong material with full transparency
     mesh.material.side = THREE.DoubleSide;
-    mesh.material.colorWrite = false;
+    mesh.material.colorWrite = false; // Does not write the color of the Portal in the scene. The result is a hole in the background to the real world depending on the camera view
     mesh.scale.set(0.1, 0.1, 0.1);
     mesh.position.set(0, 0.2, -0.3);
     scene.add(mesh);
 
-
-
+    // Random Planet or Star Spawner
 
     geometry = new THREE.Object3D();
 				function onSelect() {
@@ -165,20 +188,22 @@ function addObjects() {
 				scene.add( reticle );
 }
 
+// Object Animation function
+
 function animateObject(object, freq, amplitude, delay, currentTime, transform) { 
-  switch (transform) {
-    case "position":
+  switch (transform) { // Input of the "transform" variable. Changes the animation type depending on the input
+    case "position": // Change in Position
         window.setTimeout(() => {
           var midPosition = object.position.y;
           object.position.y = midPosition + (Math.sin(currentTime * freq) * amplitude * 0.001);
         }, delay);
       break;
-    case "rotation":
+    case "rotation": // Change in Rotation
       window.setTimeout(() => {
         object.rotation.z = currentTime / 2;
       }, delay);
     break;
-    case "scale":
+    case "scale": // Change in Scale
       window.setTimeout(() => {
         object.scale.set((Math.sin(currentTime * freq) * amplitude) + 0.08, (Math.sin(currentTime * freq) * amplitude) + 0.08, 0);
       }, delay);
@@ -189,6 +214,8 @@ function animateObject(object, freq, amplitude, delay, currentTime, transform) {
 
 }
 
+// Resizing the window refreshes the scene with new aspect ratio
+
 function onWindowResize() {
 
   camera.aspect = window.innerWidth / window.innerHeight;
@@ -198,36 +225,39 @@ function onWindowResize() {
 
 }
 
-//
+// animate Function. (Calls the "animateObject" function with input)
 
 function animate() {
-  if(gate && mesh && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){
+  if(gate && mesh && spaceSphere && xenon_Gate_Loaded == true && space_Loaded == true){ // Check if models are loaded.
     const currentTime = Date.now() / 1000; 
     time = currentTime;
       
     gate.traverse( function( child ) {
-      if ( child instanceof THREE.Mesh ) {
-  
-          child.material.emissiveIntensity = Math.sin(time)*0.2+1.3; // Adjust brightness
-          const emissiveR = Math.floor((((Math.cos(time)+1)/2)*255)); // " + (((Math.sin(time/1000)+1)/2)*255) + "
-          const emissiveG = Math.floor((((Math.sin(time)+1)/2)*255));
-          const emissiveB = Math.floor((((Math.cos(time+77.0)+1)/2)*255));
-          const emissiveRGB = "rgb(" + emissiveR + "," + emissiveG +","+ emissiveB + ")" ;
-          child.material.emissive = new THREE.Color(emissiveRGB); // Adjust Color "rgb(0, 255, 0)"
+      if ( child instanceof THREE.Mesh ) { 
+          child.material.emissiveIntensity = Math.sin(time)*0.2+1.3; // Adjust brightness of the emission map.
+          const emissiveR = Math.floor((((Math.cos(time)+1)/2)*255)); // Cycles through values from 0 to 255 for red.
+          const emissiveG = Math.floor((((Math.sin(time)+1)/2)*255)); // Cycles through values from 0 to 255 for green.
+          const emissiveB = Math.floor((((Math.cos(time+77.0)+1)/2)*255)); // Cycles through values from 0 to 255 for blue.
+          const emissiveRGB = "rgb(" + emissiveR + "," + emissiveG +","+ emissiveB + ")" ; // Combines the R, G and B values into one variable
+          child.material.emissive = new THREE.Color(emissiveRGB); // Adjust Color based on the RGB value
         }
     } );
+
+    // Jumps to here if the models are not jet loaded
   
-    animateObject(gate, 1, 1, 0, time, "position");
-    animateObject(mesh, 1, 1, 0, time, "position");
-    animateObject(mesh, 1, 1, 0, time, "rotation");
-    animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
-    animateObject(mesh, 1, 0.005, 0, 0.15*time, "scale");
-  }
+    animateObject(gate, 1, 1, 0, time, "position"); // Move Gate up and down
+    animateObject(mesh, 1, 1, 0, time, "position"); // Move Portal up and down
+    animateObject(mesh, 1, 1, 0, time, "rotation"); // Rotate Portal
+    animateObject(gate.children[1], 1, 1, 0, -1.5*time, "rotation"); // Rotate Inner Ring. gate.children[0] is the Outer ring of the Gate model. gate.children[1] is the inner ring.
+    animateObject(mesh, 1, 0.005, 0, 0.15*time, "scale"); // Adjust size of the Portal
+  } 
 
   requestAnimationFrame(animate);
   renderer.setAnimationLoop( render );
 
 }
+
+// Render function
 
 function render( timestamp, frame ) {
   if (xr_mode == "ar") {  
@@ -261,7 +291,7 @@ function render( timestamp, frame ) {
     }
   }
 
-  material.uniforms.uTime.value += 0.01;
+  material.uniforms.uTime.value += 0.01; // increasing the Time variable each frame
   material.uniforms.uResolution.value.set(
     renderer.domElement.width,
     renderer.domElement.height
